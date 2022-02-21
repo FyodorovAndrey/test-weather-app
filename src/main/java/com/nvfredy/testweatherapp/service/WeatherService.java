@@ -2,6 +2,7 @@ package com.nvfredy.testweatherapp.service;
 
 import com.nvfredy.testweatherapp.dto.ResponseOpenWeatherMapDto;
 import com.nvfredy.testweatherapp.dto.ResponseWeatherApiDto;
+import com.nvfredy.testweatherapp.dto.ResponseWeatherBitDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,8 @@ public class WeatherService {
     private String openWeatherMapPrivateKey;
     @Value("${private.weather-api.key}")
     private String weatherApiPrivateKey;
+    @Value("${private.weather-bit.key}")
+    private String weatherBitPrivateKey;
 
     public void getCurrentWeatherByCityFromOpenWeatherMap(String city) {
         ResponseOpenWeatherMapDto weather = restTemplate.getForObject(
@@ -47,5 +50,12 @@ public class WeatherService {
             log.info(weather.getLocation().getName() + " " + weather.getCurrent().getTemp());
     }
 
+    public void getCurrentWeatherByCityFromWeatherBit(String city) {
+        ResponseWeatherBitDto weather = restTemplate.getForObject(
+                String.format("https://api.weatherbit.io/v2.0/current?key=%s&city=%s", weatherBitPrivateKey, city),
+                ResponseWeatherBitDto.class);
+
+        log.info(weather.getData()[0].getCity() + " " + weather.getData()[0].getTemp());
+    }
 
 }

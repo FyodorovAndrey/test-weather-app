@@ -23,4 +23,9 @@ public class WeatherController {
     public void getCurrentWeatherFromWeatherApi(@PathVariable String city) {
         weatherService.getCurrentWeatherByCityFromWeatherApi(city);
     }
+
+    @GetMapping("/weather-bit/{city}")
+    public void getCurrentWeatherFromWeatherBit(@PathVariable String city) {
+        weatherService.getCurrentWeatherByCityFromWeatherBit(city);
+    }
 }
