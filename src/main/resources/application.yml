@@ -8,3 +8,7 @@ spring:
     username: sa
     password:
     driverClassName: org.h2.Driver
+
+private:
+  open-weather-map:
+    key: 4455d224d1b0230a8995a2760040811e
