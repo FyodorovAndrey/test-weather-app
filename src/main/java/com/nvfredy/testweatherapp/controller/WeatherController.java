@@ -14,8 +14,13 @@ public class WeatherController {
 
     private final WeatherService weatherService;
 
-    @GetMapping("/{city}")
-    public void getCurrentWeather(@PathVariable String city) {
+    @GetMapping("/open-weather-map/{city}")
+    public void getCurrentWeatherFromOpenWeatherMap(@PathVariable String city) {
         weatherService.getCurrentWeatherByCityFromOpenWeatherMap(city);
+    }
+
+    @GetMapping("/weather-api/{city}")
+    public void getCurrentWeatherFromWeatherApi(@PathVariable String city) {
+        weatherService.getCurrentWeatherByCityFromWeatherApi(city);
     }
 }

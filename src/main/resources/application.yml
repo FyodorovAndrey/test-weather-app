@@ -12,3 +12,5 @@ spring:
 private:
   open-weather-map:
     key: 4455d224d1b0230a8995a2760040811e
+  weather-api:
+    key: 56001a90422c4f86ab7123554221802

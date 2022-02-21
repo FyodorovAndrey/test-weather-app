@@ -1,6 +1,7 @@
 package com.nvfredy.testweatherapp.service;
 
 import com.nvfredy.testweatherapp.dto.ResponseOpenWeatherMapDto;
+import com.nvfredy.testweatherapp.dto.ResponseWeatherApiDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,8 @@ public class WeatherService {
 
     @Value("${private.open-weather-map.key}")
     private String openWeatherMapPrivateKey;
+    @Value("${private.weather-api.key}")
+    private String weatherApiPrivateKey;
 
     public void getCurrentWeatherByCityFromOpenWeatherMap(String city) {
         ResponseOpenWeatherMapDto weather = restTemplate.getForObject(
@@ -29,9 +32,20 @@ public class WeatherService {
 
             weather.getMain().setTemp(tempCel);
 
-            System.out.println(weather.getName() + " " + weather.getMain().getTemp());
         }
 
+        log.info(weather.getName() + " " + weather.getMain().getTemp());
+
     }
+
+        public void getCurrentWeatherByCityFromWeatherApi(String city) {
+            ResponseWeatherApiDto weather = restTemplate.getForObject(
+                String.format("https://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", weatherApiPrivateKey, city),
+                    ResponseWeatherApiDto.class);
+
+
+            log.info(weather.getLocation().getName() + " " + weather.getCurrent().getTemp());
+    }
+
 
 }
