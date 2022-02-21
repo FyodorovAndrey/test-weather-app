@@ -8,12 +8,12 @@ spring:
     username: sa
     password:
     driverClassName: org.h2.Driver
-#  jpa:
-#    spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
-#    hibernate:
-#      ddl-auto: update
-#    generate-ddl: false
-#    show-sql: true
+  jpa:
+    spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+    show-sql: true
 
 private:
   open-weather-map:
