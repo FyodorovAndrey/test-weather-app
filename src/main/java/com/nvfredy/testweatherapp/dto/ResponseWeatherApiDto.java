@@ -22,6 +22,6 @@ public class ResponseWeatherApiDto {
     @Setter
     public static class Current {
         @JsonProperty("temp_c")
-        private String temp;
+        private double temp;
     }
 }

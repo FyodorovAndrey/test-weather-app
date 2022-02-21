@@ -17,6 +17,6 @@ public class ResponseWeatherBitDto {
     public static class DataFromJson {
         @JsonProperty("city_name")
         private String city;
-        private String temp;
+        private double temp;
     }
 }
