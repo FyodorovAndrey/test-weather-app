@@ -1,4 +1,5 @@
 weather_test_db.mv.db
+weather_test_db.trace.db
 HELP.md
 .gradle
 build/

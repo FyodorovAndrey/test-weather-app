@@ -4,7 +4,7 @@ spring:
       enabled: true
       path: /h2
   datasource:
-    url: jdbc:h2:file:./weather_test_db
+    url: jdbc:h2:mem:weather_test_db
     username: sa
     password:
     driverClassName: org.h2.Driver
@@ -14,6 +14,9 @@ spring:
       ddl-auto: update
     generate-ddl: true
     show-sql: true
+server:
+  error:
+    include-message: always
 
 private:
   open-weather-map:
@@ -22,3 +25,6 @@ private:
     key: 56001a90422c4f86ab7123554221802
   weather-bit:
     key: 23c5f8a60b39492d95158ff3d4605bde
+  cities: London,GB Moscow,RU Tyumen,RU
+  schedule: 0 0/1 * * * ?
+#  schedule: 0 22 10 * * *

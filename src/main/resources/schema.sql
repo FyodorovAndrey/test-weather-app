@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS weather_statistic
 (
     id          BIGINT NOT NULL,
     city_name   VARCHAR (255),
-    date        DATE ,
+    date_time   TIMESTAMP,
     temperature DOUBLE,
     PRIMARY KEY (id)
 );

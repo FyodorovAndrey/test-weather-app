@@ -4,21 +4,31 @@ import com.nvfredy.testweatherapp.domain.Weather;
 import com.nvfredy.testweatherapp.dto.ResponseOpenWeatherMapDto;
 import com.nvfredy.testweatherapp.dto.ResponseWeatherApiDto;
 import com.nvfredy.testweatherapp.dto.ResponseWeatherBitDto;
+import com.nvfredy.testweatherapp.exception.WeatherNotFoundException;
 import com.nvfredy.testweatherapp.repository.WeatherRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Locale;
+import java.util.Collections;
+import java.util.List;
 
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@EnableScheduling
 public class WeatherService {
 
     private final RestTemplate restTemplate;
@@ -30,11 +40,41 @@ public class WeatherService {
     private String weatherApiPrivateKey;
     @Value("${private.weather-bit.key}")
     private String weatherBitPrivateKey;
+    @Value("${private.cities}")
+    private String cities;
 
-    public double getCurrentWeatherByCityFromOpenWeatherMap(String city) {
-        ResponseOpenWeatherMapDto weather = restTemplate.getForObject(
-                String.format("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s", city, openWeatherMapPrivateKey),
-                ResponseOpenWeatherMapDto.class);
+    @Scheduled(cron = "${private.schedule}")
+    public void saveWeatherScheduled() {
+        String[] citiesArray = cities.split(" ");
+
+        for (String city : citiesArray) {
+            saveWeather(city);
+        }
+
+    }
+
+    public List<Weather> getWeather(String city, LocalDate date) {
+        List<Weather> weathers = getWeatherByCityAndDate(city, date);
+
+        if (weathers.size() == 0) {
+            return Collections.singletonList(saveWeather(city));
+        }
+
+        return weathers;
+    }
+
+    private double getCurrentWeatherByCityFromOpenWeatherMap(String city) {
+
+        ResponseOpenWeatherMapDto weather;
+
+        try {
+            weather = restTemplate.getForObject(
+                    String.format("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s", city, openWeatherMapPrivateKey),
+                    ResponseOpenWeatherMapDto.class);
+        } catch (HttpClientErrorException e) {
+            throw new WeatherNotFoundException(HttpStatus.BAD_REQUEST, "OpenWeatherMap request failed!");
+        }
+
 
         if (weather != null) {
 
@@ -49,10 +89,17 @@ public class WeatherService {
         return weather.getMain().getTemp();
     }
 
-    public double getCurrentWeatherByCityFromWeatherApi(String city) {
-        ResponseWeatherApiDto weather = restTemplate.getForObject(
-                String.format("https://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", weatherApiPrivateKey, city),
-                ResponseWeatherApiDto.class);
+    private double getCurrentWeatherByCityFromWeatherApi(String city) {
+
+        ResponseWeatherApiDto weather;
+
+        try {
+            weather = restTemplate.getForObject(
+                    String.format("https://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", weatherApiPrivateKey, city),
+                    ResponseWeatherApiDto.class);
+        } catch (HttpClientErrorException e) {
+            throw new WeatherNotFoundException(HttpStatus.BAD_REQUEST, "WeatherApi request failed!");
+        }
 
         if (weather != null) {
             log.info(String.format("Data from WeatherApi: %s - %,.2f", weather.getLocation().getName(), weather.getCurrent().getTemp()));
@@ -61,10 +108,17 @@ public class WeatherService {
         return weather.getCurrent().getTemp();
     }
 
-    public double getCurrentWeatherByCityFromWeatherBit(String city) {
-        ResponseWeatherBitDto weather = restTemplate.getForObject(
-                String.format("https://api.weatherbit.io/v2.0/current?key=%s&city=%s", weatherBitPrivateKey, city),
-                ResponseWeatherBitDto.class);
+    private double getCurrentWeatherByCityFromWeatherBit(String city) {
+
+        ResponseWeatherBitDto weather;
+
+        try {
+            weather = restTemplate.getForObject(
+                    String.format("https://api.weatherbit.io/v2.0/current?key=%s&city=%s", weatherBitPrivateKey, city),
+                    ResponseWeatherBitDto.class);
+        } catch (HttpClientErrorException e) {
+            throw new WeatherNotFoundException(HttpStatus.BAD_REQUEST, "WeatherBit request failed!");
+        }
 
         if (weather != null) {
             log.info(String.format("Data from WeatherBit: %s - %,.2f", weather.getData()[0].getCity(), weather.getData()[0].getTemp()));
@@ -73,30 +127,34 @@ public class WeatherService {
         return weather.getData()[0].getTemp();
     }
 
-    public double findAverageTemperatureFromAllServices(String city) {
+    private double findAverageTemperatureFromAllServices(String city) {
 
         double[] temperatures = new double[3];
 
         temperatures[0] = getCurrentWeatherByCityFromOpenWeatherMap(city);
-        temperatures[1] =getCurrentWeatherByCityFromWeatherApi(city);
-        temperatures[2] =getCurrentWeatherByCityFromWeatherBit(city);
+        temperatures[1] = getCurrentWeatherByCityFromWeatherApi(city);
+        temperatures[2] = getCurrentWeatherByCityFromWeatherBit(city);
 
         return Arrays.stream(temperatures).average().getAsDouble();
     }
 
-    public void saveWeather(String city) {
+    private Weather saveWeather(String city) {
 
         Weather weather = new Weather();
         weather.setCityName(city);
-        weather.setTemperature(findAverageTemperatureFromAllServices(city));
-        weather.setDate(LocalDate.now());
+        BigDecimal bd = BigDecimal.valueOf(findAverageTemperatureFromAllServices(city)).setScale(2, RoundingMode.HALF_UP);
+        weather.setTemperature(bd.doubleValue());
+        weather.setDateTime(LocalDateTime.now());
 
         weatherRepository.save(weather);
 
         log.info("Weather saved successfully {}", weather);
+
+        return weather;
     }
 
-    public Weather getWeather(String city, LocalDate date) {
-        return weatherRepository.findByCityAndDate(city, date);
+
+    private List<Weather> getWeatherByCityAndDate(String city, LocalDate date) {
+        return weatherRepository.findByCityNameContainingIgnoreCaseAndDateTimeBetween(city, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
     }
 }

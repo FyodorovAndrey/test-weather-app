@@ -1,10 +1,13 @@
 package com.nvfredy.testweatherapp.domain;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
@@ -20,7 +23,7 @@ public class Weather {
     private Long id;
     private String cityName;
     private Double temperature;
-    private LocalDate date;
+    private LocalDateTime dateTime;
 
     @Override
     public boolean equals(Object o) {
