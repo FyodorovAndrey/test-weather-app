@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ResponseOpenWeatherMapDto {
+
     private String name;
     private Main main;
 
